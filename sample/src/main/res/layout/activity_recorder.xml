@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+    <com.nathaniel.recorder.RecorderView
+            android:id="@+id/recordView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:autoOpen="true"
+            app:bitRate="512"
+            app:facing="BACK"
+            app:frameRate="30"
+            app:videoHeight="1080"
+            app:videoWidth="1920" />
+
+    <com.nathaniel.recorder.ControllerView
+            android:id="@+id/layout_controller"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+</RelativeLayout>

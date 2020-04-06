@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        tools:background="#50000000">
+
+    <ProgressBar
+            android:id="@+id/progress"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_marginLeft="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="12dp"
+            android:max="100"
+            android:progress="50" />
+
+    <TextView
+            android:id="@+id/tv_back"
+            android:layout_width="60dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="25dp"
+            android:gravity="center"
+            android:text="返回"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+
+    <ImageView
+            android:id="@+id/iv_camera"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="25dp"
+            android:padding="4dp"
+            android:src="@drawable/icon_recorder_camera" />
+
+    <ImageView
+            android:id="@+id/iv_flash"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_below="@+id/iv_camera"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="15dp"
+            android:padding="4dp"
+            android:src="@drawable/icon_flash_active" />
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_alignParentBottom="true">
+
+
+        <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/btn_start"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="12dp"
+                android:text="hh:MM:ss"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+        <ImageView
+                android:id="@+id/btn_cancel"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_centerVertical="true"
+                android:padding="4dp"
+                android:src="@drawable/icon_cancel_black" />
+
+        <ImageView
+                android:id="@+id/btn_start"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_centerInParent="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/button_start_record" />
+
+        <ImageView
+                android:id="@+id/btn_finish"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:padding="4dp"
+                android:src="@drawable/icon_recorder_confirm" />
+    </RelativeLayout>
+</RelativeLayout>
