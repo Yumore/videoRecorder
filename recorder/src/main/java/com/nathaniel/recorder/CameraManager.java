@@ -94,6 +94,7 @@ public final class CameraManager {
                 }
             }
         }
+        //  cameraObject.cancelAutoFocus();
         cameraObject.setPreviewDisplay(holder);
 
         return recorderCamera.getCamera();
@@ -135,6 +136,7 @@ public final class CameraManager {
      */
     public synchronized void closeDriver() {
         if (recorderCamera != null) {
+            recorderCamera.getCamera().setPreviewCallback(null);
             recorderCamera.getCamera().release();
             recorderCamera = null;
             // Make sure to clear these each time we close the camera, so that any scanning rect
@@ -165,6 +167,7 @@ public final class CameraManager {
         }
         if (recorderCamera != null && previewing) {
             recorderCamera.getCamera().stopPreview();
+            recorderCamera.getCamera().setPreviewCallback(null);
             previewing = false;
         }
     }

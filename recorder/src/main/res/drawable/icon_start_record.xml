@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:bottom="10dp"
-        android:left="10dp"
-        android:right="10dp"
-        android:top="10dp">
+            android:bottom="12dp"
+            android:left="12dp"
+            android:right="12dp"
+            android:top="12dp">
         <shape android:shape="oval">
             <solid android:color="#ff0000" />
         </shape>
@@ -12,8 +12,8 @@
     <item>
         <shape android:shape="oval">
             <stroke
-                android:width="5dp"
-                android:color="#ffffff" />
+                    android:width="5dp"
+                    android:color="#ffffff" />
         </shape>
     </item>
 </layer-list>

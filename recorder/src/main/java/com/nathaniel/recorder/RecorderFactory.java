@@ -75,14 +75,14 @@ public final class RecorderFactory {
         //设置音频编码方式为AAC
         mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         //设置录制的视频编码为MPEG_4_SP
-        mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.MPEG_4_SP);
+        mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mediaRecorder.setAudioChannels(2);
         //设置编码帧率，此项会严重影响适配质量，基准数字越高，质量越好
         mediaRecorder.setAudioEncodingBitRate(128);
         mediaRecorder.setVideoEncodingBitRate(bitRate);
         // 设置帧率
-         mediaRecorder.setVideoFrameRate(findCloseFrameRate(parameters, frameRate));
-        Log.e(TAG, "frameRate = " + frameRate);
+        mediaRecorder.setVideoFrameRate(findCloseFrameRate(parameters, frameRate));
+        Log.e(TAG, "frameRate = " + frameRate + ", videoWidth = " + resolutionX + " videoHeight = " + resolutionY);
         String vendor = Build.MANUFACTURER;
         int audioSamplingRate;
         if (vendor != null && vendor.toLowerCase().contains("samsung")) {

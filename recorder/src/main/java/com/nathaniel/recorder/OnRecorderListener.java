@@ -1,11 +1,24 @@
 package com.nathaniel.recorder;
 
+/**
+ * @author Nathaniel
+ */
 public interface OnRecorderListener {
-    void onStartRecord();
+    /**
+     * 开始录制
+     */
+    void onRecorderStart();
 
-    void onStopRecord(long duration, String videdoPath);
+    /**
+     * 录制结束
+     *
+     * @param duration 录制时长
+     * @param filePath 文件路径
+     */
+    void onRecorderComplete(long duration, String filePath);
 
-    void onCancelRecord();
-
-    void onComplete();
+    /**
+     * 取消录制
+     */
+    void onRecorderCancel();
 }

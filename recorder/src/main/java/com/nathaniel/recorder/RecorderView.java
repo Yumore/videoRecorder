@@ -7,6 +7,7 @@ import android.content.res.TypedArray;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -21,8 +22,6 @@ import com.nathaniel.recorder.lib.R;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author nathaniel
@@ -105,6 +104,7 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     private String videoName;
     private String fileFullName;
 
+
     public RecorderView(Context context) {
         this(context, null);
     }
@@ -115,17 +115,24 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
 
     public RecorderView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        if (TextUtils.isEmpty(parentPath) || TextUtils.isEmpty(videoName)) {
+            parentPath = FileUtils.getVideoPath();
+            videoName = "sample";
+        }
         initAttrs(attrs);
         getHolder().addCallback(this);
         Log.e(TAG, " initialize recorder view ");
         cameraManager = new CameraManager(getContext().getApplicationContext());
     }
 
+    /**
+     * 初始化View属性
+     *
+     * @param attrs 属性
+     */
     private void initAttrs(@Nullable AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.RecorderView);
-        cameraFacing = typedArray.getInt(R.styleable.RecorderView_facing, FACING_BACK) == FACING_FRONT
-                ? CameraFacing.FRONT
-                : CameraFacing.BACK;
+        cameraFacing = typedArray.getInt(R.styleable.RecorderView_facing, FACING_BACK) == FACING_FRONT ? CameraFacing.FRONT : CameraFacing.BACK;
         videoWidth = typedArray.getInteger(R.styleable.RecorderView_videoWidth, DEFAULT_WIDTH);
         videoHeight = typedArray.getInteger(R.styleable.RecorderView_videoHeight, DEFAULT_HEIGHT);
         frameRate = typedArray.getInteger(R.styleable.RecorderView_frameRate, DEFAULT_FRAME_RATE);
@@ -134,13 +141,20 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
         typedArray.recycle();
     }
 
+    /**
+     * 根据相机尺重设控件宽高
+     *
+     * @param camera
+     */
     private void resizeWithCamera(Camera camera) {
         if (camera != null && camera.getParameters() != null) {
             Camera.Size size = camera.getParameters().getPreviewSize();
             int sizeWith = size.width > size.height ? size.height : size.width;
             int sizeHeight = size.width + size.height - sizeWith;
+            // 算出宽高比
             double ratio = sizeHeight / (double) sizeWith;
             int targetHeight = (int) (getWidth() * ratio);
+            // 如果目标高度与当前高度差值大于100，就重设高度
             if (Math.abs(targetHeight - getHeight()) > 100) {
                 ViewGroup.LayoutParams params = getLayoutParams();
                 params.height = targetHeight;
@@ -149,9 +163,11 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
         }
     }
 
+    /**
+     * 打开相机
+     */
     public void openCamera() {
-        if (ContextCompat.checkSelfPermission(getContext(),
-                Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
             Toast.makeText(getContext(), R.string.open_camera_error, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -159,7 +175,6 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
             closeCamera();
             try {
                 cameraManager.openDriver(getHolder(), cameraFacing);
-                // resizeWithCamera(mCameraManager.getCamera());
                 cameraManager.startPreview();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -175,29 +190,31 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
         }
     }
 
-    public void startRecord() {
+    public void startRecorder() {
         Camera camera = cameraManager.getRecorderCamera();
         if (camera != null) {
             Camera.Parameters parameters = camera.getParameters();
             printCameraParams(parameters);
             camera.unlock();
-            mediaRecorder = RecorderFactory.newCustomConfigInstance(camera, parameters, videoWidth, videoHeight,
-                    frameRate, bitRate * KB);
+            mediaRecorder = RecorderFactory.newCustomConfigInstance(camera, parameters, videoWidth, videoHeight, frameRate, bitRate * KB);
             File file = new File(parentPath, fileFullName);
-            Log.e(TAG, "begin to recorder, file " + file.getAbsolutePath());
             if (file.exists()) {
                 boolean flag = file.delete();
                 Log.e(TAG, " delete file " + file.getName() + " success is " + flag);
             }
+            Log.e(TAG, "begin to recorder, file " + file.getAbsolutePath());
             mediaRecorder.setOutputFile(file.getAbsolutePath());
             int cameraOrientation = cameraManager.getOpenCamera().getOrientation();
             mediaRecorder.setOrientationHint(cameraOrientation);
             mediaRecorder.setPreviewDisplay(getHolder().getSurface());
             try {
                 mediaRecorder.prepare();
-                Thread.sleep(1000);
                 mediaRecorder.start();
-            } catch (IllegalStateException | IOException | InterruptedException e) {
+            } catch (IllegalStateException | IOException e) {
+                mediaRecorder.stop();
+                mediaRecorder.reset();
+                mediaRecorder.release();
+                camera.lock();
                 e.printStackTrace();
             }
         } else {
@@ -206,8 +223,7 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     }
 
     private void printCameraParams(Camera.Parameters parameters) {
-        Log.e(TAG, "video support size : " + parameters.getPreferredPreviewSizeForVideo().width + "X"
-                + parameters.getPreferredPreviewSizeForVideo().height);
+        Log.e(TAG, "video support size : " + parameters.getPreferredPreviewSizeForVideo().width + "X" + parameters.getPreferredPreviewSizeForVideo().height);
         for (int[] sizes : parameters.getSupportedPreviewFpsRange()) {
             for (int size : sizes) {
                 Log.e(TAG, "video support fps range : " + size);
@@ -218,8 +234,8 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
         }
     }
 
-    public void stopRecord() {
-        Log.e(TAG, " stop recorder  " + recorderStatus.name() + " mediaRecorder is empty " + (mediaRecorder == null));
+    public void stopRecorder() {
+        Log.e(TAG, " stop recorder  " + recorderStatus.name() + " mediaRecorder is empty or not " + (mediaRecorder == null));
         if (mediaRecorder == null) {
             return;
         }
@@ -230,7 +246,36 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
             Camera camera = cameraManager.getRecorderCamera();
             if (camera != null) {
                 camera.lock();
+                camera.release();
             }
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void cancelRecorder() {
+        resetRecorder();
+        deleteFile();
+    }
+
+    private void deleteFile() {
+        File file = new File(parentPath, fileFullName);
+        if (file.exists()) {
+            boolean flag = file.delete();
+            Log.e(TAG, " delete file " + file.getName() + " success is " + flag);
+        }
+    }
+
+
+    public void resetRecorder() {
+        if (mediaRecorder == null) {
+            return;
+        }
+        Log.e(TAG, "reset recorder and status is " + recorderStatus.name());
+        try {
+            mediaRecorder.stop();
+            mediaRecorder.reset();
+            openCamera();
         } catch (IllegalStateException e) {
             e.printStackTrace();
         }
@@ -245,7 +290,7 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     }
 
     public String getVideoPath() {
-        return parentPath + File.separator + videoName + FILE_EXTENSION;
+        return parentPath + videoName + FILE_EXTENSION;
     }
 
     public void setVideoPath(String parentPath, String videoName) {
@@ -265,6 +310,7 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     public int getVideoWidth() {
         return videoWidth;
     }
+
 
     public void setVideoWidth(int videoWidth) {
         this.videoWidth = videoWidth;
@@ -310,13 +356,13 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+        Log.e(TAG, "surfaceChanged()");
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         surfaceEnable = false;
-        closeCamera();
+        Log.e(TAG, "surfaceDestroyed()");
     }
 
     public void reverseCamera() {
@@ -332,14 +378,19 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
         return cameraFacing == CameraFacing.BACK;
     }
 
-    public void resumeRecord() {
+    public void pauseRecord() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mediaRecorder.pause();
+        } else {
             Log.e(TAG, "system version name is " + Build.VERSION.CODENAME);
         }
-        mediaRecorder.resume();
     }
 
-    public void pausedRecord() {
-        mediaRecorder.pause();
+    public void resumeRecord() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mediaRecorder.resume();
+        } else {
+            Log.e(TAG, "system version name is " + Build.VERSION.CODENAME);
+        }
     }
 }

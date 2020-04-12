@@ -43,7 +43,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     private void initView() {
         surfaceView = findViewById(R.id.surfaceView);
-        tvBack = findViewById(R.id.tv_back);
+        tvBack = findViewById(R.id.preview_back_tv);
         tvBack.setOnClickListener(this);
         mediaPlayer = new MediaPlayer();
         if (TextUtils.isEmpty(videoPath)) {

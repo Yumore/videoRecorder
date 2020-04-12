@@ -1,6 +1,9 @@
 package com.nathaniel.recorder;
 
 import android.content.Context;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,8 +27,10 @@ import java.io.File;
 /**
  * @author nathaniel
  */
-public class ControllerView extends FrameLayout implements View.OnClickListener {
+public class ControllerView extends FrameLayout implements View.OnClickListener, MediaScannerConnection.OnScanCompletedListener {
     private static final String TAG = ControllerView.class.getSimpleName();
+    private ImageView videoCamera;
+    private ImageView videoCancel, videoFinish;
     private String parentPath, videoName;
     private ImageView recorderFlash;
     private RecorderView recorderView;
@@ -33,10 +38,13 @@ public class ControllerView extends FrameLayout implements View.OnClickListener 
     private TextView recorderTime;
     private int minDuration = 3;
     private int maxDuration = 15;
-    private long startTime, pausedTime, pauseDuration;
+    private long startTime;
+    private long pausedTime;
+    private long pauseDuration;
     private Handler mainHandler;
     private OnRecorderListener onRecorderListener;
     private ProgressBar progressBar;
+    private long realDuration;
 
     private Runnable durationCounter = new Runnable() {
         @Override
@@ -47,7 +55,7 @@ public class ControllerView extends FrameLayout implements View.OnClickListener 
             Log.e(TAG, String.format("时间差值：%d，真实时长：%s, 录制进度：%d", currentDuration, formatTime(currentDuration), percent));
             progressBar.setProgress((int) percent);
             if (maxDuration > 0 && currentDuration >= maxDuration * 1000) {
-                stopRecord(false);
+                stopRecorder();
             } else {
                 mainHandler.postDelayed(this, 100);
             }
@@ -64,17 +72,17 @@ public class ControllerView extends FrameLayout implements View.OnClickListener 
 
     public ControllerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        parentPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "vipon" + File.separator;
+        parentPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "recorder" + File.separator;
         videoName = "sample";
         View layoutController = LayoutInflater.from(context).inflate(R.layout.layout_record_controller, this);
-        recorderStart = layoutController.findViewById(R.id.btn_start);
-        recorderTime = layoutController.findViewById(R.id.tv_time);
-        ImageView videoCancel = layoutController.findViewById(R.id.btn_cancel);
-        ImageView videoFinish = layoutController.findViewById(R.id.btn_finish);
-        TextView videoBack = layoutController.findViewById(R.id.tv_back);
-        ImageView videoCamera = layoutController.findViewById(R.id.iv_camera);
-        recorderFlash = layoutController.findViewById(R.id.iv_flash);
-        progressBar = layoutController.findViewById(R.id.progress);
+        recorderStart = layoutController.findViewById(R.id.recorder_start_iv);
+        recorderTime = layoutController.findViewById(R.id.recorder_time_tv);
+        videoCancel = layoutController.findViewById(R.id.recorder_cancel_iv);
+        videoFinish = layoutController.findViewById(R.id.recorder_finish_iv);
+        TextView videoBack = layoutController.findViewById(R.id.recorder_back_iv);
+        videoCamera = layoutController.findViewById(R.id.recorder_camera_iv);
+        recorderFlash = layoutController.findViewById(R.id.recorder_flash_iv);
+        progressBar = layoutController.findViewById(R.id.recorder_progress_pb);
         progressBar.setProgress(0);
         recorderStart.setOnClickListener(this);
         videoCancel.setOnClickListener(this);
@@ -85,6 +93,22 @@ public class ControllerView extends FrameLayout implements View.OnClickListener 
         mainHandler = new Handler(Looper.getMainLooper());
     }
 
+    private void cancelRecorder() {
+        Log.e(TAG, "cancel: last recorder status " + recorderView.getRecorderStatus().name());
+        if (recorderView.getRecorderStatus() == RecorderStatus.PREPARED) {
+            return;
+        }
+        recorderView.setRecorderStatus(RecorderStatus.PREPARED);
+        recorderStart.setImageResource(R.drawable.icon_start_record);
+        startTime = System.currentTimeMillis();
+        recorderView.cancelRecorder();
+        mainHandler.removeCallbacks(durationCounter);
+        progressBar.setProgress(0);
+        progressBar.setVisibility(View.GONE);
+        videoCancel.setVisibility(View.GONE);
+        videoFinish.setVisibility(View.GONE);
+    }
+
     public void bindRecordView(@NonNull RecorderView recorderView) {
         if (this.recorderView != null) {
             Log.w("RecordControllerLayout", "RecordView 已经绑定，不能再次绑定");
@@ -92,14 +116,6 @@ public class ControllerView extends FrameLayout implements View.OnClickListener 
         }
         this.recorderView = recorderView;
         recorderView.setVideoPath(parentPath, videoName);
-    }
-
-    public int getMinDuration() {
-        return minDuration;
-    }
-
-    public int getMaxDuration() {
-        return maxDuration;
     }
 
     public void setDuration(int minDuration, int maxDuration) {
@@ -116,92 +132,89 @@ public class ControllerView extends FrameLayout implements View.OnClickListener 
 
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.btn_start) {
+        if (view.getId() == R.id.recorder_start_iv) {
             if (recorderView == null) {
-                Log.w("RecordControllerLayout", "请先绑定 RecordView");
+                Log.e("RecordControllerLayout", "请先绑定 RecordView");
                 return;
             }
-            startRecord();
-        } else if (view.getId() == R.id.btn_cancel) {
-            cancelRecord();
+            startRecorder();
+        } else if (view.getId() == R.id.recorder_cancel_iv) {
+            cancelRecorder();
             if (onRecorderListener != null) {
-                onRecorderListener.onCancelRecord();
+                onRecorderListener.onRecorderCancel();
             }
-        } else if (view.getId() == R.id.btn_finish) {
-            stopRecord(false);
-            if (onRecorderListener != null) {
-                onRecorderListener.onComplete();
-            }
-        } else if (view.getId() == R.id.iv_camera) {
+        } else if (view.getId() == R.id.recorder_finish_iv) {
+            stopRecorder();
+        } else if (view.getId() == R.id.recorder_camera_iv) {
             recorderView.reverseCamera();
-        } else if (view.getId() == R.id.iv_flash) {
+        } else if (view.getId() == R.id.recorder_flash_iv) {
             recorderView.setTorch(!recorderView.getTorchState());
-            recorderFlash.setImageResource(recorderView.getTorchState() ? R.drawable.icon_flash_active : R.drawable.icon_flash_normal);
+            recorderFlash.setImageResource(recorderView.getTorchState() ? R.drawable.icon_flash_closed : R.drawable.icon_flash_normal);
         }
     }
 
-    private void startRecord() {
+    private void startRecorder() {
         Log.e(TAG, "recorder status is " + recorderView.getRecorderStatus().name());
         if (onRecorderListener == null) {
             throw new RuntimeException(" onRecorderListener is null");
         }
         if (recorderView.getRecorderStatus() == RecorderStatus.RECORDING) {
-            recorderView.setRecorderStatus(RecorderStatus.PAUSING);
-            recorderView.pausedRecord();
+            // 从录制状态转换到暂停状态
             pausedTime = System.currentTimeMillis();
-            recorderStart.setImageResource(R.drawable.button_start_record);
+            recorderStart.setImageResource(R.drawable.icon_start_record);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                recorderView.setRecorderStatus(RecorderStatus.PAUSING);
+                videoCancel.setVisibility(View.VISIBLE);
+                long duration = System.currentTimeMillis() - startTime;
+                videoFinish.setVisibility(duration > 3000 ? View.VISIBLE : View.GONE);
+                recorderView.pauseRecord();
+            } else {
+                recorderView.stopRecorder();
+                recorderView.setRecorderStatus(RecorderStatus.PREPARED);
+            }
             mainHandler.removeCallbacks(durationCounter);
         } else if (recorderView.getRecorderStatus() == RecorderStatus.PAUSING) {
-            recorderView.setRecorderStatus(RecorderStatus.RECORDING);
+            // 暂停状态到录制状态
             pauseDuration += System.currentTimeMillis() - pausedTime;
-            recorderView.resumeRecord();
-            recorderStart.setImageResource(R.drawable.button_stop_record);
-            mainHandler.post(durationCounter);
-        } else {
+            Log.e(TAG, String.format("暂停时长:%s", formatTime(pauseDuration)));
+            recorderStart.setImageResource(R.drawable.icon_stop_record);
             recorderView.setRecorderStatus(RecorderStatus.RECORDING);
-            recorderView.startRecord();
+            mainHandler.post(durationCounter);
+            recorderView.resumeRecord();
+            videoFinish.setVisibility(View.GONE);
+            videoCancel.setVisibility(View.GONE);
+        } else {
+            // 从未录制到录制状态
+            recorderStart.setImageResource(R.drawable.icon_stop_record);
+            recorderView.setRecorderStatus(RecorderStatus.RECORDING);
             startTime = System.currentTimeMillis();
-            recorderStart.setImageResource(R.drawable.button_stop_record);
-            onRecorderListener.onStartRecord();
             mainHandler.removeCallbacks(durationCounter);
+            recorderView.startRecorder();
             mainHandler.post(durationCounter);
         }
     }
 
-    /**
-     * 强制结束录制
-     */
-    public void cancelRecord() {
-        stopRecord(true);
-    }
-
-    /**
-     * 结束录制
-     *
-     * @param manual true:手动取消
-     *               false:手动结束
-     */
-    private void stopRecord(boolean manual) {
+    private void stopRecorder() {
         if (recorderView.getRecorderStatus() == RecorderStatus.PREPARED) {
             return;
         }
-        long duration = System.currentTimeMillis() - startTime - pauseDuration;
-        if (!manual && minDuration > 0 && (duration < minDuration * 1000)) {
+        realDuration = System.currentTimeMillis() - startTime - pauseDuration;
+        if (minDuration > 0 && (realDuration < minDuration * 3000)) {
+            recorderView.cancelRecorder();
             Toast.makeText(getContext(), getContext().getString(R.string.record_min_duration_hint, minDuration), Toast.LENGTH_SHORT).show();
+            recorderStart.setVisibility(View.VISIBLE);
             return;
         }
-        recorderView.stopRecord();
+        recorderStart.setImageResource(R.drawable.icon_start_record);
         recorderView.setRecorderStatus(RecorderStatus.PREPARED);
-        recorderStart.setImageResource(R.drawable.button_start_record);
-        recorderTime.setText("00:00");
-        if (onRecorderListener != null) {
-            if (manual) {
-                onRecorderListener.onCancelRecord();
-            } else {
-                onRecorderListener.onStopRecord(duration, recorderView.getVideoPath());
-            }
-        }
+        Log.e(TAG, String.format("结束录制，时长: %s", formatTime(realDuration)));
+        recorderTime.setText(formatTime(realDuration));
         mainHandler.removeCallbacks(durationCounter);
+        recorderView.resetRecorder();
+        videoCamera.setClickable(recorderView.getRecorderStatus() != RecorderStatus.RECORDING);
+        recorderFlash.setVisibility(recorderView.getTorchEnable() ? View.VISIBLE : View.GONE);
+        recorderStart.setVisibility(View.VISIBLE);
+        MediaScannerConnection.scanFile(getContext(), new String[]{recorderView.getVideoPath()}, null, this);
     }
 
 
@@ -218,5 +231,13 @@ public class ControllerView extends FrameLayout implements View.OnClickListener 
 
     private String formatUnit(long number) {
         return number >= 10 ? String.valueOf(number) : "0" + number;
+    }
+
+    @Override
+    public void onScanCompleted(String path, Uri uri) {
+        Log.e(TAG, "onScanCompleted() path = " + path + ", uri = " + uri);
+        if (onRecorderListener != null) {
+            onRecorderListener.onRecorderComplete(realDuration, path);
+        }
     }
 }
