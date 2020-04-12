@@ -10,3 +10,4 @@ captures/
 .setting/
 .project
 local.properties
+release/
