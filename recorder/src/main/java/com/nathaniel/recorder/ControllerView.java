@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -19,8 +18,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import java.io.File;
 
 /**
  * @author nathaniel
@@ -70,7 +67,7 @@ public class ControllerView extends FrameLayout implements View.OnClickListener,
 
     public ControllerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        parentPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "recorder" + File.separator;
+        parentPath = FileUtils.getVideoPath();
         videoName = "sample";
         View layoutController = LayoutInflater.from(context).inflate(R.layout.layout_record_controller, this);
         recorderStart = layoutController.findViewById(R.id.recorder_start_iv);
