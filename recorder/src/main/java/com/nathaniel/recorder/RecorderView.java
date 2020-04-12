@@ -102,7 +102,6 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     private String videoName;
     private String fileFullName;
 
-
     public RecorderView(Context context) {
         this(context, null);
     }
@@ -130,7 +129,9 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
      */
     private void initAttrs(@Nullable AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.RecorderView);
-        cameraFacing = typedArray.getInt(R.styleable.RecorderView_facing, FACING_BACK) == FACING_FRONT ? CameraFacing.FRONT : CameraFacing.BACK;
+        cameraFacing = typedArray.getInt(R.styleable.RecorderView_facing, FACING_BACK) == FACING_FRONT
+                ? CameraFacing.FRONT
+                : CameraFacing.BACK;
         videoWidth = typedArray.getInteger(R.styleable.RecorderView_videoWidth, DEFAULT_WIDTH);
         videoHeight = typedArray.getInteger(R.styleable.RecorderView_videoHeight, DEFAULT_HEIGHT);
         frameRate = typedArray.getInteger(R.styleable.RecorderView_frameRate, DEFAULT_FRAME_RATE);
@@ -165,7 +166,8 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
      * 打开相机
      */
     public void openCamera() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
+        if (ContextCompat.checkSelfPermission(getContext(),
+                Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
             Toast.makeText(getContext(), R.string.open_camera_error, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -194,7 +196,8 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
             Camera.Parameters parameters = camera.getParameters();
             printCameraParams(parameters);
             camera.unlock();
-            mediaRecorder = RecorderFactory.newCustomConfigInstance(camera, parameters, videoWidth, videoHeight, frameRate, bitRate * KB);
+            mediaRecorder = RecorderFactory.newCustomConfigInstance(camera, parameters, videoWidth, videoHeight,
+                    frameRate, bitRate * KB);
             File file = new File(parentPath, fileFullName);
             if (file.exists()) {
                 boolean flag = file.delete();
@@ -221,7 +224,8 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     }
 
     private void printCameraParams(Camera.Parameters parameters) {
-        Log.e(TAG, "video support size : " + parameters.getPreferredPreviewSizeForVideo().width + "X" + parameters.getPreferredPreviewSizeForVideo().height);
+        Log.e(TAG, "video support size : " + parameters.getPreferredPreviewSizeForVideo().width + "X"
+                + parameters.getPreferredPreviewSizeForVideo().height);
         for (int[] sizes : parameters.getSupportedPreviewFpsRange()) {
             for (int size : sizes) {
                 Log.e(TAG, "video support fps range : " + size);
@@ -233,7 +237,8 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     }
 
     public void stopRecorder() {
-        Log.e(TAG, " stop recorder  " + recorderStatus.name() + " mediaRecorder is empty or not " + (mediaRecorder == null));
+        Log.e(TAG, " stop recorder  " + recorderStatus.name() + " mediaRecorder is empty or not "
+                + (mediaRecorder == null));
         if (mediaRecorder == null) {
             return;
         }
@@ -264,7 +269,6 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
         }
     }
 
-
     public void resetRecorder() {
         if (mediaRecorder == null) {
             return;
@@ -291,6 +295,12 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
         return parentPath + videoName + FILE_EXTENSION;
     }
 
+    /**
+     * 设置video的路径
+     * 
+     * @param parentPath 文件的路路径
+     * @param videoName  文件名称不带后缀名
+     */
     public void setVideoPath(String parentPath, String videoName) {
         this.parentPath = parentPath;
         this.videoName = videoName;
@@ -308,7 +318,6 @@ public class RecorderView extends SurfaceView implements SurfaceHolder.Callback 
     public int getVideoWidth() {
         return videoWidth;
     }
-
 
     public void setVideoWidth(int videoWidth) {
         this.videoWidth = videoWidth;
