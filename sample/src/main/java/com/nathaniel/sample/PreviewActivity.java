@@ -1,4 +1,4 @@
-package com.nathaniel.recorder;
+package com.nathaniel.sample;
 
 import android.media.MediaPlayer;
 import android.os.Build;

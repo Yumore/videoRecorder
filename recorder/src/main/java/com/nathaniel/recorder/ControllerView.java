@@ -20,8 +20,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.nathaniel.recorder.lib.R;
-
 import java.io.File;
 
 /**

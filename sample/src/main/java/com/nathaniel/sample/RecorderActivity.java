@@ -1,4 +1,4 @@
-package com.nathaniel.recorder;
+package com.nathaniel.sample;
 
 import android.Manifest;
 import android.content.Intent;
@@ -10,6 +10,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
+import com.nathaniel.recorder.ControllerView;
+import com.nathaniel.recorder.OnRecorderListener;
+import com.nathaniel.recorder.RecorderView;
 
 /**
  * @author Nathaniel
