@@ -7,8 +7,8 @@ android {
         applicationId "com.nathaniel.video.recorder"
         minSdkVersion 17
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.2"
     }
 
     signingConfigs {
@@ -28,7 +28,5 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation project(':recorder')
 }
