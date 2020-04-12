@@ -15,4 +15,4 @@
 [Demo地址](https://www.pgyer.com/SQcD)
 
 ## 致谢
-[部分代码引用](https://github.com/MingYueChunQiu/RecorderManager)
+部分代码引用已经忘记来源，如果您发现引用了您的代码，请告知，谢谢
