@@ -13,6 +13,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * @author Nathaniel
+ */
 public final class CameraUtils {
     private static final String TAG = CameraUtils.class.getSimpleName();
     private static final Pattern SEMICOLON = Pattern.compile(";");

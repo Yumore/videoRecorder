@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.RejectedExecutionException;
 
-@SuppressWarnings("deprecation") // camera APIs
 final class FocusedManager implements Camera.AutoFocusCallback {
 
     private static final String TAG = FocusedManager.class.getSimpleName();

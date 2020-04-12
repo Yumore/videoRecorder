@@ -7,6 +7,9 @@ import android.util.Log;
 import java.io.File;
 
 
+/**
+ * @author Nathaniel
+ */
 public class FileUtils {
     private static final String TAG = FileUtils.class.getSimpleName();
     private static final String ROOT_PATH = "recorder";

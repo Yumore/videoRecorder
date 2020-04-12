@@ -1,15 +1,15 @@
 package com.nathaniel.recorder;
 
-/*******************************************************************
+/***
  * Config.java  2019-11-26
  * <P>
  * 参数配置<br/>
  * <br/>
  * </p>
  *
- * @author:zhoupeng
  *
- ******************************************************************/
+ * @author Nathaniel
+ */
 public interface RecorderConfig {
 
     String KEY_DECODE_1D_PRODUCT = "preferences_decode_1D_product";

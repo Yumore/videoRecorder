@@ -152,6 +152,8 @@ public class ControllerView extends FrameLayout implements View.OnClickListener,
         Log.e(TAG, "recorder status is " + recorderView.getRecorderStatus().name());
         if (onRecorderListener == null) {
             throw new RuntimeException(" onRecorderListener is null");
+        } else {
+            onRecorderListener.onRecorderStart();
         }
         if (recorderView.getRecorderStatus() == RecorderStatus.RECORDING) {
             // 从录制状态转换到暂停状态
