@@ -159,10 +159,10 @@ public class ControllerView extends FrameLayout implements View.OnClickListener,
             // 从录制状态转换到暂停状态
             pausedTime = System.currentTimeMillis();
             recorderStart.setImageResource(R.drawable.icon_start_record);
+            long duration = System.currentTimeMillis() - startTime;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 recorderView.setRecorderStatus(RecorderStatus.PAUSING);
-                videoCancel.setVisibility(View.VISIBLE);
-                long duration = System.currentTimeMillis() - startTime;
+                videoCancel.setVisibility(duration >= 2000 ? View.VISIBLE : View.GONE);
                 videoFinish.setVisibility(duration > 3000 ? View.VISIBLE : View.GONE);
                 recorderView.pauseRecord();
             } else {
